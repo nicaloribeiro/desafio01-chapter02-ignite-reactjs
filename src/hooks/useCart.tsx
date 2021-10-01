@@ -32,10 +32,24 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   });
 
 
+  async function verificaEstoque(productId: number) {
+    const { data } = await api.get(`/stock/${productId}`)
+    const product = cart.find(product => product.id == productId)
+    if(product){
+      return data.amount > product.amount ? true : false
+    }else {
+      return true
+    }
+  } 
+
   const addProduct = async (productId: number) => {
     try {
-      const resp = await api.get(`/products/${productId}`)
-      const { data } = resp;
+      const { data } = await api.get(`/products/${productId}`)
+      const estoque = await verificaEstoque(data.id)
+      if(!estoque) {
+        toast.error('Quantidade solicitada fora de estoque');
+        return;
+      }      
       let newPorducts: Array<Product> = []
       if(cart.some(el => el.id === data.id)){
       newPorducts = cart.map(product =>
